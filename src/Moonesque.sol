@@ -4,8 +4,9 @@ pragma solidity ^0.8.9;
 import {ERC20} from "../lib/openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
 import {IERC20} from "../lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 import {Ownable} from "../lib/openzeppelin-contracts/contracts/access/Ownable.sol";
+import {ReentrancyGuard} from "../lib/openzeppelin-contracts/contracts/utils/ReentrancyGuard.sol";
 
-contract Moonesque is ERC20, Ownable {
+contract Moonesque is ERC20, Ownable, ReentrancyGuard {
     address public treasuryAddress;
     uint256 public burnbips;
     uint256 public taxbips;
@@ -17,7 +18,7 @@ contract Moonesque is ERC20, Ownable {
         address _treasuryAddress,
         uint256 _burnbips,
         uint256 _taxbips
-    ) ERC20("Moonesque", "MOON") {
+    ) ERC20("Moonesque", "MOON") Ownable(msg.sender) {
         treasuryAddress = _treasuryAddress;
         burnbips = _burnbips;
         taxbips = _taxbips;
@@ -57,7 +58,7 @@ contract Moonesque is ERC20, Ownable {
             "Address not on list of exemption addresses!"
         );
         // deleting value from mapping
-        delete exempted[excemption];
+        delete exempted[exemption];
 
         for (uint256 i = 0; i < exemptedAddresses.length; i++) {
             // it replaces it with the last element in the array
@@ -99,10 +100,10 @@ contract Moonesque is ERC20, Ownable {
             uint256 burnAmount = (_value * burnbips) / 10000;
             uint256 taxAmount = (_value * taxbips) / 10000;
             uint256 remainingValue = _value - burnAmount - taxAmount;
-            _burn(msg.sender, burnAmount);
+
+            _burn(_from, burnAmount);
             super.transfer(treasuryAddress, taxAmount);
-            super.transfer(_to, remainingValue);
-            return super.transferFrom(_from, _to, _value);
+            return super.transferFrom(_from, _to, remainingValue);
         }
     }
 }
