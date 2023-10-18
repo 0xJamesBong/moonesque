@@ -84,7 +84,7 @@ contract Moonesque is ERC20, Ownable {
             uint256 remainingValue = _value - burnAmount - taxAmount;
             _burn(msg.sender, burnAmount);
             super.transfer(treasuryAddress, taxAmount);
-            super.transfer(_to, remainingValue);
+            return super.transfer(_to, remainingValue);
         }
     }
 
